@@ -45,7 +45,6 @@ backend/build/
 
 # Ignore backend environment and secret files
 backend/.env
-backend/.env.*
 
 # Ignore frontend environment and secret files
 frontend/.env
