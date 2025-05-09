@@ -7,7 +7,6 @@ build/
 
 # Environment and secret files
 .env
-.env.*
 
 # Logs
 npm-debug.log*
