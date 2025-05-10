@@ -1,18 +1,50 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db").default || require("../db"); // Ensure compatibility with ES module export
+const db = require("../db").default || require("../db");
+
+// Helper: Normalize email
+function normalizeEmail(email) {
+  let [local, domain] = email.toLowerCase().trim().split("@");
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    local = local.split("+")[0].replace(/\./g, ""); // Remove +aliases and dots
+  }
+  return `${local}@${domain}`;
+}
+
+// Check for valid email format
+function isValidEmailSyntax(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 // Add a new contact
 router.post("/", async (req, res) => {
   const { name, email, original_email } = req.body;
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!isValidEmailSyntax(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
 
   try {
+    // Check for existing active contact
+    const existing = await db`
+      SELECT * FROM contacts
+      WHERE email = ${normalizedEmail}
+        AND status != 'expired'
+    `;
+
+    if (existing.length > 0) {
+      return res.status(409).json({ error: "Contact already exists and is active." });
+    }
+
+    // Insert new contact with normalized email
     const result = await db`
       INSERT INTO contacts (name, email, original_email)
-      VALUES (${name}, ${email}, ${original_email})
+      VALUES (${name}, ${normalizedEmail}, ${original_email})
       RETURNING *
     `;
-    res.json(result[0]); // same as result.rows[0]
+
+    res.json(result[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to add contact" });

@@ -11,13 +11,13 @@ const openai = new OpenAI({
 async function generateFollowup(originalEmail, name, followupCount) {
   let prompt;
 
-  if (followupCount === 0) {
+  if (followupCount === 1) {
     prompt = `You're helping write a polite, friendly follow-up email to ${name} who hasn't replied to the following message:
 
 "${originalEmail}"
 
 This is the first follow-up. Gently remind them about the original message—use wording like "I'm not sure if you saw my last email"—and keep it short and respectful. Do not be pushy.`;
-  } else if (followupCount === 1) {
+  } else if (followupCount === 2) {
     prompt = `You're writing a second follow-up email to ${name}. They have not replied to the original message:
 
 "${originalEmail}"
@@ -26,7 +26,7 @@ Do not restate the original email in detail. Instead, write a friendly, stand-al
   } else {
     prompt = `This is the final follow-up email to ${name}, who has not responded to two previous messages.
 
-Write a short, professional closing message that leaves the door open for future contact. Be kind, thank them for their time, and don’t reference previous emails directly.`;
+Write a short, professional closing message that leaves the door open for future contact. Be kind, thank them for their time, and don't reference previous emails directly.`;
   }
 
   const res = await openai.chat.completions.create({

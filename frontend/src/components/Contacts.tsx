@@ -17,8 +17,10 @@ import {
   Box,
   Typography,
   IconButton,
+  Snackbar,
+  Alert,
 } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CenterWrapper from '../components/layout/CenterWrapper';
@@ -45,6 +47,7 @@ const Contacts = () => {
     email: '',
     original_email: '',
   });
+  const [error, setError] = useState<{ message: string; severity: 'error' | 'success' } | null>(null);
   const { logout, token } = useAuth();
 
   useEffect(() => {
@@ -58,8 +61,12 @@ const Contacts = () => {
     try {
       const response = await api.get('/api/contacts');
       setContacts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching contacts:', error);
+      setError({
+        message: error.response?.data?.error || 'Failed to fetch contacts',
+        severity: 'error'
+      });
     }
   };
 
@@ -69,8 +76,16 @@ const Contacts = () => {
       setOpen(false);
       setNewContact({ name: '', email: '', original_email: '' });
       fetchContacts();
-    } catch (error) {
+      setError({
+        message: 'Contact added successfully',
+        severity: 'success'
+      });
+    } catch (error: any) {
       console.error('Error adding contact:', error);
+      setError({
+        message: error.response?.data?.error || 'Failed to add contact',
+        severity: 'error'
+      });
     }
   };
 
@@ -78,8 +93,36 @@ const Contacts = () => {
     try {
       await api.delete(`/api/contacts/${id}`);
       fetchContacts();
-    } catch (error) {
+      setError({
+        message: 'Contact deleted successfully',
+        severity: 'success'
+      });
+    } catch (error: any) {
       console.error('Error deleting contact:', error);
+      setError({
+        message: error.response?.data?.error || 'Failed to delete contact',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleCloseError = () => {
+    setError(null);
+  };
+
+  const handleRunScheduler = async () => {
+    try {
+      await api.post('/run-scheduler');
+      setError({
+        message: 'Scheduler completed successfully',
+        severity: 'success'
+      });
+    } catch (error: any) {
+      console.error('Error running scheduler:', error);
+      setError({
+        message: error.response?.data?.error || 'Failed to run scheduler',
+        severity: 'error'
+      });
     }
   };
 
@@ -105,6 +148,15 @@ const Contacts = () => {
             sx={{ ml: 2 }}
           >
             Add Contact
+          </Button>
+
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRunScheduler}
+            sx={{ ml: 2 }}
+          >
+            Run Scheduler
           </Button>
 
           <Button
@@ -154,6 +206,17 @@ const Contacts = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseError} severity={error?.severity} sx={{ width: '100%' }}>
+            {error?.message}
+          </Alert>
+        </Snackbar>
 
         {/* Add Contact Dialog */}
         <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">

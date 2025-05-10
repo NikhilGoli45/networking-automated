@@ -16,18 +16,22 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     try {
       await login(username, password);
       navigate('/contacts');
-    } catch (err) {
-      setError('Invalid username or password');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Invalid username or password');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -70,6 +74,7 @@ const Login = () => {
               autoFocus
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
             />
             <TextField
               margin="normal"
@@ -82,6 +87,7 @@ const Login = () => {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
 
             <Button
@@ -89,8 +95,9 @@ const Login = () => {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={isLoading}
             >
-              Sign In
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </Box>
         </Paper>

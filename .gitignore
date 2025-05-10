@@ -49,3 +49,7 @@ backend/.env
 # Ignore frontend environment and secret files
 frontend/.env
 frontend/.env.*
+
+# Google Cloud files
+client_secret.json
+token.json
