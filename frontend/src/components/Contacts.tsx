@@ -32,7 +32,7 @@ interface Contact {
   original_email: string;
   created_at: string;
   status: string;
-  follow_up_count: number;
+  followup_count: number;
 }
 
 const api = axios.create({
@@ -192,7 +192,7 @@ const Contacts = () => {
                     {new Date(contact.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>{contact.status}</TableCell>
-                  <TableCell>{contact.follow_up_count}</TableCell>
+                  <TableCell>{contact.followup_count}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       color="error"
