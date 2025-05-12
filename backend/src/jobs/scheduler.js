@@ -1,84 +1,102 @@
 function isGoodDay() {
-    const today = new Date().getDay(); // 0 = Sunday ... 6 = Saturday
-    return today === 2 || today === 3; // Tuesday or Wednesday
+  const today = new Date().getDay(); // 0 = Sunday ... 6 = Saturday
+  return today === 2 || today === 3; // Tuesday or Wednesday
 }
 
-const db = require("../db");
-const { sendEmail, hasResponded } = require("../services/email");
-const { generateFollowup } = require("../services/gpt");
+const db = require("../db").default || require("../db");
+const { sendEmail, sendGeneratedEmail, hasResponded } = require("../services/email");
+const { generateEmail } = require("../services/gpt");
 
 async function runScheduler() {
   console.log("Running scheduler...");
 
-  if (!isGoodDay()) {
-    console.log("Not a good day to send emails. Exiting.");
-    return;
-  }
+  // if (!isGoodDay()) {
+  //   console.log("Not a good day to send emails. Exiting.");
+  //   return;
+  // }
 
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
 
-  const result = await db.query(`
+  const contacts = await db`
     SELECT * FROM contacts
     WHERE status = 'active'
       AND (
         (followup_count = 0 AND last_sent IS NULL) OR
-        (followup_count > 0 AND last_sent < $1)
+        (followup_count > 0 AND last_sent < ${oneMinuteAgo})
       )
-  `, [oneWeekAgo]);
+  `;
 
-  const contacts = result.rows;
+  console.log(`Found ${contacts.length} contacts to process`);
 
   for (let contact of contacts) {
     const { id, name, email, original_email, followup_count, last_sent } = contact;
-  
+
     try {
-      const responded = await hasResponded(email, last_sent || contact.created_at);
-  
+      let responded = false;
+
+      if (last_sent) {
+        console.log(`→ Checking if ${email} has responded since ${last_sent}...`);
+        responded = await hasResponded(email, last_sent);
+        console.log(`← Responded: ${responded}`);
+      } else {
+        console.log(`Skipping response check for ${email} (no message sent yet)`);
+      }
+
       if (responded) {
-        await db.query(`UPDATE contacts SET status = 'success' WHERE id = $1`, [id]);
-  
+        await db`
+          UPDATE contacts
+          SET status = 'success'
+          WHERE id = ${id}
+        `;
+
         await sendEmail(
-          "your_email@example.com",
-          `✅ ${name} responded!`,
+          process.env.NOTIFY_EMAIL || "your_email@example.com",
+          `${name} responded!`,
           `${name} <${email}> has replied to your outreach.\n\nYou can mark the thread as complete.`
         );
-  
+
         console.log(`Marked ${email} as success and sent notification.`);
         continue;
       }
-  
+
       if (followup_count >= 4) {
-        await db.query(`UPDATE contacts SET status = 'expired' WHERE id = $1`, [id]);
+        await db`
+          UPDATE contacts
+          SET status = 'expired'
+          WHERE id = ${id}
+        `;
         console.log(`Contact ${email} marked as expired.`);
         continue;
       }
-  
-      let subject, body;
 
       if (followup_count === 0) {
-        // First email: original outreach
-        subject = "Quick intro";
-        body = original_email;
+        const { subject } = await generateEmail(original_email, name, 0);
+      
+        // Format original body as HTML (same logic as email.js)
+        const html = original_email
+          .split("\n\n")
+          .map(paragraph => `<p>${paragraph.trim()}</p>`)
+          .join("");
+      
+        await sendEmail(email, subject, html);
       } else {
-        // Follow-up email
-        subject = "Quick follow-up";
-        body = await generateFollowup(original_email, name, followup_count);
+        await sendGeneratedEmail(email, original_email, name, followup_count); // GPT full follow-up
       }
 
-      await sendEmail(email, subject, body);
-  
-      await db.query(`
+      await db`
         UPDATE contacts
         SET followup_count = followup_count + 1,
             last_sent = NOW()
-        WHERE id = $1
-      `, [id]);
-  
-      console.log(`Follow-up sent to ${email} (attempt ${followup_count + 1})`);
+        WHERE id = ${id}
+      `;
+
+      console.log(`Email sent to ${email} (attempt ${followup_count + 1})`);
     } catch (err) {
       console.error(`Failed to process ${email}:`, err);
     }
   }
+
+  console.log("Scheduler run complete.");
 }
 
 module.exports = { runScheduler };

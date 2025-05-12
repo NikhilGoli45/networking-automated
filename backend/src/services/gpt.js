@@ -6,35 +6,50 @@ const openai = new OpenAI({
 });
 
 /**
- * Generate a follow-up email based on the original message and follow-up count
+ * Generate an email (initial or follow-up) with subject and body.
+ * @param {string} originalEmail - The original email message sent.
+ * @param {string} recipientName - The name of the recipient.
+ * @param {number} followupCount - 0 for initial outreach, >0 for follow-ups.
+ * @returns {Promise<{ subject: string, body: string }>}
  */
-async function generateFollowup(originalEmail, name, followupCount) {
-  let prompt;
+async function generateEmail(originalEmail, recipientName, followupCount) {
+  const prompt = `
+    You are writing a follow-up networking email.
+    
+    Here is the original email that was sent:
+    "${originalEmail}"
+    
+    The recipient's name is ${recipientName}. This is follow-up #${followupCount} (0 means it's the first outreach).
+    
+    Write a JSON response with two fields:
+    1. "subject" — a short (max 5 words), casual subject line, make sure it matches the content of the body. Do not include follow-up count or any urgency. Keep it neutral and friendly. If the follow-up number is 0, make it a subject that would be appropriate for an initial outreach email.
+    2. "body" — the email body. For follow-ups (followup_count > 0), match the tone of the original email. Do not be overly formal. Avoid adding urgency, emotional appeals, or pressure. Do not reference how many times you've followed up. Keep the message brief — ideally shorter than the original. Format it with three clear sections: greeting, body, and closing. Separate these sections with double line breaks (\\n\\n). Do not return HTML. End with "Best, Nikhil".
+    
+    Avoid using any placeholders like [recipient's name] or [your name].
+    Return valid JSON in this format:
+    {
+      "subject": "...",
+      "body": "..."
+    }
+  `;
 
-  if (followupCount === 1) {
-    prompt = `You're helping write a polite, friendly follow-up email to ${name} who hasn't replied to the following message:
-
-"${originalEmail}"
-
-This is the first follow-up. Gently remind them about the original message—use wording like "I'm not sure if you saw my last email"—and keep it short and respectful. Do not be pushy.`;
-  } else if (followupCount === 2) {
-    prompt = `You're writing a second follow-up email to ${name}. They have not replied to the original message:
-
-"${originalEmail}"
-
-Do not restate the original email in detail. Instead, write a friendly, stand-alone message that shows continued interest but respects their time. It should still be concise and professional.`;
-  } else {
-    prompt = `This is the final follow-up email to ${name}, who has not responded to two previous messages.
-
-Write a short, professional closing message that leaves the door open for future contact. Be kind, thank them for their time, and don't reference previous emails directly.`;
-  }
-
-  const res = await openai.chat.completions.create({
+  const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
   });
 
-  return res.choices[0].message.content;
+  try {
+    const parsed = JSON.parse(response.choices[0].message.content);
+    return {
+      subject: parsed.subject,
+      body: parsed.body,
+    };
+  } catch (e) {
+    throw new Error("Failed to parse GPT response: " + response.choices[0].message.content);
+  }
 }
 
-module.exports = { generateFollowup };
+module.exports = {
+  generateEmail,
+};

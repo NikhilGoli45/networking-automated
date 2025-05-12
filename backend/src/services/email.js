@@ -1,74 +1,95 @@
-const fetch = require("node-fetch");
-require("dotenv").config();
+const fs = require("fs");
+const { google } = require("googleapis");
+const { authorize } = require("./auth");
+const db = require("../db").default || require("../db");
+const { generateEmail } = require("./gpt");
 
+// Converts plain text with \n\n into paragraph-separated HTML
+function formatAsHtml(text) {
+  return text
+    .split("\n\n")
+    .map(paragraph => `<p>${paragraph.trim()}</p>`)
+    .join("");
+}
+
+// Encode the email message to base64url format
+function createRawMessage(to, subject, body) {
+  const message = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `Content-Type: text/html; charset=UTF-8`,
+    "",
+    body,
+  ].join("\n");
+
+  return Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+// Send an email using Gmail API
 async function sendEmail(to, subject, html) {
+  console.log(`→ sendEmail() called for ${to}`);
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+    const auth = await authorize();
+    const gmail = google.gmail({ version: "v1", auth });
+
+    const raw = createRawMessage(to, subject, html);
+
+    const res = await gmail.users.messages.send({
+      userId: "me",
+      requestBody: {
+        raw,
       },
-      body: JSON.stringify({
-        from: process.env.SENDER_EMAIL,
-        to,
-        subject,
-        html,
-      }),
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error(`Failed to send email to ${to}`, data);
-
-      // Optionally mark as bounced
-      await db`
-        UPDATE contacts
-        SET status = 'bounced'
-        WHERE email = ${to}
-      `;
-
-      throw new Error(`Email send failed: ${data.error?.message || res.statusText}`);
-    }
-
-    return data;
+    console.log(`Email sent to ${to}:`, res.data);
+    return res.data;
   } catch (err) {
     console.error(`Error sending to ${to}:`, err);
+
+    // Optionally mark as bounced
+    await db`
+      UPDATE contacts
+      SET status = 'bounced'
+      WHERE email = ${to}
+    `;
+
     throw err;
   }
 }
 
-module.exports = { sendEmail };
-
-const fs = require("fs");
-const { google } = require("googleapis");
-const { authorize } = require("./auth");
-
-const credentials = JSON.parse(fs.readFileSync("src/client_secret.json"));
-
+// Check if the contact has responded
 async function hasResponded(email, sinceDate) {
-  return new Promise((resolve, reject) => {
-    authorize(credentials, async (auth) => {
-      const gmail = google.gmail({ version: "v1", auth });
+  const auth = await authorize();
+  const gmail = google.gmail({ version: "v1", auth });
 
-      const query = `from:${email} after:${Math.floor(new Date(sinceDate).getTime() / 1000)}`;
+  const query = `from:${email} after:${Math.floor(new Date(sinceDate).getTime() / 1000)}`;
 
-      try {
-        const res = await gmail.users.messages.list({
-          userId: "me",
-          q: query,
-          maxResults: 1,
-        });
-
-        const hasReply = res.data.messages && res.data.messages.length > 0;
-        resolve(hasReply);
-      } catch (err) {
-        console.error("Gmail API error:", err);
-        reject(err);
-      }
+  try {
+    const res = await gmail.users.messages.list({
+      userId: "me",
+      q: query,
+      maxResults: 1,
     });
-  });
+
+    return !!(res.data.messages && res.data.messages.length > 0);
+  } catch (err) {
+    console.error("Gmail API error:", err);
+    return false;
+  }
 }
 
-module.exports = { hasResponded };
+// GPT-powered helper to generate subject + body and send in one call
+async function sendGeneratedEmail(to, originalEmail, recipientName, followupCount) {
+  const { subject, body } = await generateEmail(originalEmail, recipientName, followupCount);
+  const html = formatAsHtml(body);
+  return await sendEmail(to, subject, html);
+}
+
+module.exports = {
+  sendEmail,
+  hasResponded,
+  sendGeneratedEmail,
+};
