@@ -17,7 +17,7 @@ const CenterWrapper = ({ children }: CenterWrapperProps) => (
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      p: 2, // a little breathing room on small screens
+      p: 2,
     }}
   >
     {children}

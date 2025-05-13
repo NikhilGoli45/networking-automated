@@ -65,7 +65,11 @@ async function hasResponded(email, sinceDate) {
   const auth = await authorize();
   const gmail = google.gmail({ version: "v1", auth });
 
-  const query = `from:${email} after:${Math.floor(new Date(sinceDate).getTime() / 1000)}`;
+  const bufferSeconds = 60;
+  const sinceUnix = Math.floor(new Date(sinceDate).getTime() / 1000) - bufferSeconds;
+  const query = `from:${email} after:${sinceUnix} in:any -in:sent`;
+
+  console.log("→ Gmail search query:", query);
 
   try {
     const res = await gmail.users.messages.list({
@@ -74,12 +78,17 @@ async function hasResponded(email, sinceDate) {
       maxResults: 1,
     });
 
-    return !!(res.data.messages && res.data.messages.length > 0);
+    console.log("→ Gmail API response:", JSON.stringify(res.data, null, 2));
+
+    const matched = !!(res.data.messages && res.data.messages.length > 0);
+    console.log(`← hasResponded result for ${email}: ${matched}`);
+    return matched;
   } catch (err) {
     console.error("Gmail API error:", err);
     return false;
   }
 }
+
 
 // GPT-powered helper to generate subject + body and send in one call
 async function sendGeneratedEmail(to, originalEmail, recipientName, followupCount) {
