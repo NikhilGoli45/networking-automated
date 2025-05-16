@@ -35,8 +35,8 @@ async function runScheduler() {
       let responded = false;
 
       if (last_sent) {
-        console.log(`→ Checking if ${email} has responded since ${last_sent}...`);
-        responded = await hasResponded(email, last_sent);
+        console.log(`→ Checking if ${email} has responded...`);
+        responded = await hasResponded(email);
         console.log(`← Responded: ${responded}`);
       } else {
         console.log(`Skipping response check for ${email} (no message sent yet)`);
@@ -50,7 +50,7 @@ async function runScheduler() {
         `;
 
         await sendEmail(
-          process.env.NOTIFY_EMAIL || "your_email@example.com",
+          process.env.SENDER_EMAIL || "Set SENDER_EMAIL in .env",
           `${name} responded!`,
           `${name} <${email}> has replied to your outreach.\n\nYou can mark the thread as complete.`
         );
@@ -78,9 +78,9 @@ async function runScheduler() {
           .map(paragraph => `<p>${paragraph.trim()}</p>`)
           .join("");
       
-        await sendEmail(email, subject, html);
+        await sendEmail(email, subject, html, id);
       } else {
-        await sendGeneratedEmail(email, original_email, name, followup_count); // GPT full follow-up
+        await sendGeneratedEmail(email, original_email, name, followup_count, id); 
       }
 
       await db`
