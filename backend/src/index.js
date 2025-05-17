@@ -8,10 +8,17 @@ const authMiddleware = require("./middleware/auth");
 const authRoutes = require("./routes/auth");
 
 const app = express();
+
+// Configure CORS with more permissive settings for static site
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5174",
-  credentials: true
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+  exposedHeaders: ['Set-Cookie'],
+  maxAge: 86400 // 24 hours
 }));
+
 app.use(cookieParser());
 app.use(express.json());
 
