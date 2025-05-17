@@ -1,6 +1,6 @@
 function isGoodDay() {
   const today = new Date().getDay(); // 0 = Sunday ... 6 = Saturday
-  return today === 2 || today === 3; // Tuesday or Wednesday
+  return today === 1 || today === 2 || today === 3; // Monday, Tuesday, Wednesday
 }
 
 const db = require("../db").default || require("../db");
@@ -10,19 +10,19 @@ const { generateEmail } = require("../services/gpt");
 async function runScheduler() {
   console.log("Running scheduler...");
 
-  // if (!isGoodDay()) {
-  //   console.log("Not a good day to send emails. Exiting.");
-  //   return;
-  // }
+  if (!isGoodDay()) {
+    console.log("Not a good day to send emails. Exiting.");
+    return;
+  }
 
-  const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const contacts = await db`
     SELECT * FROM contacts
     WHERE status = 'active'
       AND (
         (followup_count = 0 AND last_sent IS NULL) OR
-        (followup_count > 0 AND last_sent < ${oneMinuteAgo})
+        (followup_count > 0 AND last_sent < ${oneWeekAgo})
       )
   `;
 
