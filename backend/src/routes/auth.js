@@ -17,11 +17,12 @@ router.post("/", async (req, res) => {
 
   const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "7d" });
   
-  // Set HTTP-only cookie
+  // Set HTTP-only cookie for cross-site (static frontend) auth
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-    sameSite: 'strict',
+    secure: true, // Always true for cross-site cookies (Render uses HTTPS)
+    sameSite: 'none', // Must be 'none' for cross-site cookies
+    // domain: '.yourdomain.com', // Optional: set to your root domain if using subdomains
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
   
