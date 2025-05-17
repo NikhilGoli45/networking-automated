@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
     httpOnly: true,
     secure: true, // Always true for cross-site cookies (Render uses HTTPS)
     sameSite: 'none', // Must be 'none' for cross-site cookies
-    // domain: '.yourdomain.com', // Optional: set to your root domain if using subdomains
+    domain: '.onrender.com', // Set to root domain for subdomain sharing
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
   
