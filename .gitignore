@@ -53,3 +53,5 @@ frontend/.env.*
 # Google Cloud files
 client_secret.json
 token.json
+
+out/

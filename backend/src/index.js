@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Routes
-app.use("/api", authRoutes); // This will handle /api/test-gmail
+app.use("/api/login", authRoutes);
 app.use("/api/contacts", authMiddleware, contactsRoutes);
 
 // Health check

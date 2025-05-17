@@ -40,39 +40,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const router = useRouter()
 
   useEffect(() => {
-    // Check for token in localStorage on initial load
-    const storedToken = localStorage.getItem("token")
-    if (storedToken) {
-      setToken(storedToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`
+    // Check if we're authenticated via cookie
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("/api/check-auth", { withCredentials: true })
+        if (response.data.authenticated) {
+          setToken("authenticated") // We don't need to store the actual token
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    checkAuth()
   }, [])
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token)
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-    } else {
-      localStorage.removeItem("token")
-      delete api.defaults.headers.common["Authorization"]
-    }
-  }, [token])
 
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post("/api/login", {
         username,
         password,
+      }, {
+        withCredentials: true // Enable cookies
       })
-      setToken(response.data.token)
+      setToken("authenticated")
     } catch (error) {
       console.error("Login error:", error)
       throw error
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post("/api/logout", {}, { withCredentials: true })
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
     setToken(null)
     router.push("/login")
   }
