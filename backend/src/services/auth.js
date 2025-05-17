@@ -1,21 +1,22 @@
-const fs = require("fs");
-const path = require("path");
 const { google } = require("googleapis");
 const http = require("http");
 const url = require("url");
 
-const CREDENTIALS_PATH = "src/client_secret.json";
-const TOKEN_PATH = "token.json";
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.readonly"
 ];
 
 function loadOAuthClient() {
-  const content = fs.readFileSync(CREDENTIALS_PATH);
-  const credentials = JSON.parse(content);
-  const { client_id, client_secret, redirect_uris } = credentials.web;
-  return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+  const client_id = process.env.GOOGLE_CLIENT_ID;
+  const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+
+  if (!client_id || !client_secret || !redirect_uri) {
+    throw new Error("Missing required Google OAuth environment variables");
+  }
+
+  return new google.auth.OAuth2(client_id, client_secret, redirect_uri);
 }
 
 function startServerForCode() {
@@ -40,15 +41,20 @@ function startServerForCode() {
 async function authorize() {
   const oAuth2Client = loadOAuthClient();
 
-  // Check for cached token
-  if (fs.existsSync(TOKEN_PATH)) {
-    const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
-    console.log("Loaded existing token from file.");
-    oAuth2Client.setCredentials(token);
-    return oAuth2Client;
+  // Check for token in environment variable
+  const tokenString = process.env.GOOGLE_OAUTH_TOKEN;
+  if (tokenString) {
+    try {
+      const token = JSON.parse(tokenString);
+      console.log("Loaded token from environment variable.");
+      oAuth2Client.setCredentials(token);
+      return oAuth2Client;
+    } catch (error) {
+      console.error("Error parsing token from environment:", error);
+    }
   }
 
-  // Token not found, start auth flow
+  // Token not found or invalid, start auth flow
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
     scope: SCOPES,
@@ -60,9 +66,9 @@ async function authorize() {
   const { tokens } = await oAuth2Client.getToken(code);
   oAuth2Client.setCredentials(tokens);
 
-  // Save token to disk
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
-  console.log("Token saved to", TOKEN_PATH);
+  // Log the token so it can be added to environment variables
+  console.log("New token obtained. Add this to your environment variables as GOOGLE_OAUTH_TOKEN:");
+  console.log(JSON.stringify(tokens));
 
   return oAuth2Client;
 }
