@@ -30,17 +30,21 @@ export default function DashboardPage() {
   }, [isAuthenticated, authLoading, router])
 
   const fetchContacts = async () => {
+    if (!isAuthenticated) return
+    
     setIsLoading(true)
     try {
       const response = await api.get("/api/contacts")
       setContacts(response.data)
     } catch (error: any) {
       console.error("Error fetching contacts:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.response?.data?.error || "Failed to fetch contacts",
-      })
+      if (error.response?.status !== 401) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.response?.data?.error || "Failed to fetch contacts",
+        })
+      }
     } finally {
       setIsLoading(false)
     }

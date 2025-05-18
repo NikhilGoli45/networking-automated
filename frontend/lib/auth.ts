@@ -59,6 +59,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [token])
 
+  // Add axios interceptor to handle 401 errors
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          setToken(null)
+          router.push("/login")
+        }
+        return Promise.reject(error)
+      }
+    )
+
+    return () => {
+      api.interceptors.response.eject(interceptor)
+    }
+  }, [router])
+
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post("/api/login", {
