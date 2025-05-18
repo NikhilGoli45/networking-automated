@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/login", authRoutes);
+app.use("/api", authRoutes); // This will handle both /api/login and /api/validate-token
 app.use("/api/contacts", authMiddleware, contactsRoutes);
 
 // Health check

@@ -39,14 +39,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  // Validate token on initial load
   useEffect(() => {
-    // Check for token in localStorage on initial load
-    const storedToken = localStorage.getItem("token")
-    if (storedToken) {
-      setToken(storedToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`
+    const validateToken = async () => {
+      const storedToken = localStorage.getItem("token")
+      if (storedToken) {
+        try {
+          // Set the token in axios headers
+          api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`
+          
+          // Validate token by making a request to a protected endpoint
+          await api.get("/api/validate-token")
+          
+          // If request succeeds, token is valid
+          setToken(storedToken)
+        } catch (error) {
+          // If request fails, clear invalid token
+          console.error("Token validation failed:", error)
+          localStorage.removeItem("token")
+          delete api.defaults.headers.common["Authorization"]
+        }
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+
+    validateToken()
   }, [])
 
   useEffect(() => {
