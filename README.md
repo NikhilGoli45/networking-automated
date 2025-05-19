@@ -310,7 +310,7 @@ The frontend will be available at http://localhost:5174 and the backend at http:
 After deployment, test the email functionality:
 1. Log in to the application
 2. Add your own email address as a contact, preferrably different than the one you are sending emails from as it might mess up the reply detection
-3. Send a test email to yourself by running the scheduler
+3. Send a test email to yourself by running the scheduler using the button
 4. Verify that you receive the email
   - Note: The system only sends emails on Mon, Tue, and Wed so don't worry if you didn't get an email and its not one of those days
 5. Check that the email content and formatting are correct
