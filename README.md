@@ -1,6 +1,58 @@
 # Networking Automation Service
 
-This service provides automated networking capabilities with both frontend and backend components. Follow this guide to set up the service on your own machine.
+## Overview
+
+This service automates the process of maintaining professional relationships through personalized email outreach. It helps you stay connected with your network by automatically sending thoughtful, AI-generated emails to your contacts on a regular schedule.
+
+### Key Features
+- Automated email scheduling (Mondays, Tuesdays, and Wednesdays)
+- AI-powered follow-up email generation based on your initial outreach
+- Smart reply detection to avoid sending follow-ups to contacts who have responded
+- Secure authentication system
+- Modern, responsive user interface
+- Email tracking and management
+
+### How It Works
+1. Add contacts to your network through the dashboard
+2. Write and send your initial outreach email to each contact
+3. The AI system analyzes your initial email and generates appropriate follow-up content that:
+   - Maintains the same tone and style as your original message
+   - References previous communication
+   - Adapts to the contact's response patterns
+4. Follow-up emails are sent on scheduled days (Mon-Wed)
+5. The system tracks responses and adjusts follow-up timing accordingly
+6. You can monitor all communications through the dashboard
+
+### Technology Stack
+
+#### Frontend
+- **Framework**: Next.js 15
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **State Management**: React Context
+- **HTTP Client**: Axios
+- **Form Handling**: React Hook Form with Zod validation
+
+#### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: PostgreSQL (hosted on Supabase)
+- **Authentication**: JWT
+- **Email Service**: Gmail API with OAuth2
+- **AI Integration**: OpenAI API
+- **Scheduling**: Custom scheduler
+
+#### Infrastructure
+- **Hosting**: Render (Backend and Frontend)
+- **Database Hosting**: Supabase
+
+### Architecture
+- **Frontend**: Static site built with Next.js, deployed as static files
+- **Backend**: RESTful API service handling authentication, email management, and AI integration
+- **Database**: PostgreSQL database storing contacts, email history, and user data
+- **Email Service**: Gmail API integration for sending and tracking emails
+- **AI Service**: OpenAI API integration for generating personalized email content
 
 ## Prerequisites
 
@@ -108,6 +160,9 @@ cp .env.template .env
 - `GOOGLE_CLIENT_ID`: OAuth 2.0 Client ID
   - Go to [Google Cloud Console](https://console.cloud.google.com)
   - Create a new project or select existing one
+  - Navigate to "APIs & Services" > "Library"
+  - Search for "Gmail API"
+  - Click "Enable" to enable the Gmail API
   - Navigate to "APIs & Services" > "Credentials"
   - Click "Create Credentials" > "OAuth client ID"
   - Select "Web application"
@@ -282,4 +337,4 @@ If you encounter any issues:
 
 ## Support
 
-For additional support or questions, please [open an issue](<repository-issues-url>). 
+For additional support or questions, please [open an issue](https://github.com/NikhilGoli45/networking-automated/issues) or contact me at ngoli@umich.edu. 
