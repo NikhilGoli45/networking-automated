@@ -96,7 +96,6 @@ cp .env.template .env
   - Choose any available port on your system
     - Note: This port needs to be different than the port of your Frontend and Redirect URI of your Google Oauth
 
-
 - `OPENAI_API_KEY`: Your OpenAI API key
   - Go to [OpenAI Platform](https://platform.openai.com)
   - Sign up or log in to your account
@@ -198,6 +197,13 @@ cp .env.template .env
   - Copy the contents of `token.base64` to this variable
   - Example: `GOOGLE_OAUTH_TOKEN_BASE64=eyJ...`
   - Note: This token is long-lived and only needs to be generated once. After getting it, you can deploy to production.
+
+- `SCHEDULER_SECRET`: Secret key to protect the scheduler endpoint
+  - Generate a secure random string (at least 32 characters)
+  - You can use this command: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+  - Example: `SCHEDULER_SECRET=your_generated_secret_here`
+  - This secret is required to trigger the scheduler manually
+  - Keep this secret secure as it protects your scheduler from unauthorized access
 
 ### 3. Frontend Setup
 
