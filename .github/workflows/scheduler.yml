@@ -1,0 +1,17 @@
+name: Daily Scheduler
+
+on:
+  schedule:
+    - cron: "0 12 * * *"  # Every day at 8 AM Eastern / 12 UTC
+  workflow_dispatch:       # Optional manual trigger
+
+jobs:
+  trigger-scheduler:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger /run-scheduler
+        run: |
+          curl -X POST ${{ secrets.SCHEDULER_URL }} \
+            -H "Authorization: Bearer ${{ secrets.SCHEDULER_TOKEN }}" \
+            --fail
