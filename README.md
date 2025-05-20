@@ -258,8 +258,8 @@ The frontend will be available at http://localhost:5174 and the backend at http:
 5. Configure the service:
    - Name: `networking-automated-backend` (or your preferred name)
    - Environment: `Node`
-   - Build Command: `npm install`
-   - Start Command: `npm start`
+   - Build Command: backend/ $ `npm install`
+   - Start Command: backene/ $ `npm start`
    - Plan: Free (or your preferred plan)
 
 6. Add the following environment variables in Render's dashboard:
@@ -300,8 +300,8 @@ The frontend will be available at http://localhost:5174 and the backend at http:
    - Connect your GitHub repository
    - Configure the site:
      - Name: `networking-automated-frontend` (or your preferred name)
-     - Build Command: `npm install && npm run build`
-     - Publish Directory: `out`
+     - Build Command: frontend/ $ `npm install && npm run build`
+     - Publish Directory: frontend/ `out`
    - Click "Create Static Site"
    - Wait for the deployment to complete
 
