@@ -20,13 +20,15 @@ app.get("/", (_, res) => res.send("Outreach API is running"));
 // Scheduler trigger route
 app.post("/run-scheduler", authMiddleware, async (req, res) => {
   const authHeader = req.headers.authorization;
+  console.log("AUTH HEADER:", authHeader);
 
-  // Option A: Check for a valid GitHub token
   const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
   const isGithub = token && token === process.env.SCHEDULER_SECRET;
-
-  // Option B: Check if user is authenticated (check for username)
   const isUser = req.user && req.user.username;
+
+  console.log("Token match (GitHub)?", isGithub);
+  console.log("User logged in?", isUser);
+  console.log("Decoded req.user:", req.user);
 
   if (!isGithub && !isUser) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -40,6 +42,7 @@ app.post("/run-scheduler", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Scheduler failed" });
   }
 });
+
 
 
 const PORT = process.env.PORT || 3000;
