@@ -311,6 +311,25 @@ The frontend will be available at http://localhost:5174 and the backend at http:
    - [GitHub Pages](https://pages.github.com)
    - Or any other static hosting service
 
+### 3. Setting up GitHub Actions for Daily Scheduler
+
+The repository includes a GitHub Actions workflow that triggers the scheduler daily at 8 AM Eastern Time (12:00 UTC). To set it up:
+
+1. Add the following secrets to your GitHub repository:
+   - Go to your repository settings
+   - Navigate to "Secrets and variables" > "Actions"
+   - Add these secrets:
+     - `SCHEDULER_URL`: Your Render backend URL with the scheduler endpoint (e.g., `https://your-backend.onrender.com/run-scheduler`)
+     - `SCHEDULER_TOKEN`: The same secret you set as `SCHEDULER_SECRET` in your backend `.env` file
+
+2. Verify the workflow:
+   - Go to your repository's "Actions" tab
+   - You should see the "Daily Scheduler" workflow
+   - You can manually trigger it using the "Run workflow" button
+   - The workflow will automatically run at 8 AM Eastern Time (12:00 UTC) every day
+
+Note: Make sure your Render backend is configured to handle the scheduler requests with the provided secret.
+
 ## Testing
 
 After deployment, test the email functionality:
