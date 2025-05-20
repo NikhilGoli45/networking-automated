@@ -25,8 +25,8 @@ app.post("/run-scheduler", authMiddleware, async (req, res) => {
   const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
   const isGithub = token && token === process.env.SCHEDULER_SECRET;
 
-  // Option B: Check if user is authenticated (you define this)
-  const isUser = req.user && req.user.id; // assuming auth middleware sets req.user
+  // Option B: Check if user is authenticated (check for username)
+  const isUser = req.user && req.user.username;
 
   if (!isGithub && !isUser) {
     return res.status(401).json({ error: "Unauthorized" });
