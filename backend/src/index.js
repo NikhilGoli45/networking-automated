@@ -18,7 +18,7 @@ app.use("/api/contacts", authMiddleware, contactsRoutes);
 app.get("/", (_, res) => res.send("Outreach API is running"));
 
 // Scheduler trigger route
-app.post("/run-scheduler", async (req, res) => {
+app.post("/run-scheduler", authMiddleware, async (req, res) => {
   const authHeader = req.headers.authorization;
 
   // Option A: Check for a valid GitHub token
