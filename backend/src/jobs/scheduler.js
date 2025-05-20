@@ -10,19 +10,19 @@ const { generateEmail } = require("../services/gpt");
 async function runScheduler() {
   console.log("Running scheduler...");
 
-  // if (!isGoodDay()) {
-  //   console.log("Not a good day to send emails. Exiting.");
-  //   return;
-  // }
+  if (!isGoodDay()) {
+    console.log("Not a good day to send emails. Exiting.");
+    return;
+  }
 
-  const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const contacts = await db`
     SELECT * FROM contacts
     WHERE status = 'active'
       AND (
         (followup_count = 0 AND last_sent IS NULL) OR
-        (followup_count > 0 AND last_sent < ${oneMinuteAgo})
+        (followup_count > 0 AND last_sent < ${oneWeekAgo})
       )
   `;
 
