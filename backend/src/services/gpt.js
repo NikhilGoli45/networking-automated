@@ -22,8 +22,10 @@ async function generateEmail(originalEmail, recipientName, followupCount) {
     The recipient's name is ${recipientName}. This is follow-up #${followupCount} (0 means it's the first outreach).
     
     Write a JSON response with two fields:
-    1. "subject" — a short (max 5 words), casual subject line, make sure it matches the content of the body. Do not include follow-up count or any urgency. Keep it neutral and friendly. If the follow-up number is 0, make it a subject that would be appropriate for an initial outreach email.
-    2. "body" — the email body. For follow-ups (followup_count > 0), match the tone of the original email. Do not be overly formal. Avoid adding urgency, emotional appeals, or pressure. Do not reference how many times you've followed up. Keep the message brief — ideally shorter than the original. Format it with three clear sections: greeting, body, and closing. Separate these sections with double line breaks (\\n\\n). Do not return HTML. End with "Best, Nikhil".
+    1. "subject":
+      - If follow-up number is 0 (initial outreach), generate a clear and formal subject line (max 12 words) that matches the body content. It should reflect the topic professionally, such as "Inquiry About New Grad Hiring Timeline and Quick Chat".
+      - If follow-up number is greater than 0, use a short (max 5 words), casual subject line that is neutral, friendly, and matches the body.
+    2. "body": the email body. For follow-ups (followup_count > 0), match the tone of the original email. Do not be overly formal. Avoid adding urgency, emotional appeals, or pressure. Do not reference how many times you've followed up. Keep the message brief — ideally shorter than the original. Format it with three clear sections: greeting, body, and closing. Separate these sections with double line breaks (\\n\\n). Do not return HTML. End with "Best,\n Nikhil".
     
     Avoid using any placeholders like [recipient's name] or [your name].
     Return valid JSON in this format:

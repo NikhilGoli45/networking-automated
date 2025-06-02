@@ -7,9 +7,11 @@ const { generateEmail } = require("./gpt");
 // Converts plain text with \n\n into paragraph-separated HTML
 function formatAsHtml(text) {
   return text
-    .split("\n\n")
-    .map(paragraph => `<p>${paragraph.trim()}</p>`)
-    .join("");
+  .split("\n\n")
+  .map(paragraph =>
+    `<p>${paragraph.trim().replace(/\n/g, "<br>")}</p>`
+  )
+  .join("");
 }
 
 // Encode the email message to base64url format

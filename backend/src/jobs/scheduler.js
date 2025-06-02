@@ -75,7 +75,9 @@ async function runScheduler() {
         // Format original body as HTML (same logic as email.js)
         const html = original_email
           .split("\n\n")
-          .map(paragraph => `<p>${paragraph.trim()}</p>`)
+          .map(paragraph =>
+            `<p>${paragraph.trim().replace(/\n/g, "<br>")}</p>`
+          )
           .join("");
       
         await sendEmail(email, subject, html, id);
