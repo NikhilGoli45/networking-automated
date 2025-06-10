@@ -15,7 +15,8 @@ async function runScheduler() {
     return;
   }
 
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const leewayMs = 60 * 60 * 1000; // 1 hour in ms
+  const oneWeekAgo = new Date(Date.now() - (7 * 24 * 60 * 60 * 1000) + leewayMs );
 
   const contacts = await db`
     SELECT * FROM contacts
